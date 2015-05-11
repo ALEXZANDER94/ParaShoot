@@ -11,6 +11,7 @@
 #include <GL/glu.h>
 #include <X11/Xutil.h>
 #include "log.h"
+#include "alexA.cpp"
 #include "ppm.h"
 extern "C" {
 #include "fonts.h"
@@ -49,9 +50,11 @@ int sky = 1;
 int character = 1;
 int keys[65536];
 
+/*
 struct Vec {
     float x, y, z;
 };
+
 
 struct Shape {
     float width, height;
@@ -74,7 +77,7 @@ struct Game {
 	n = 0;
     }
 };
-
+*/
 
 //Function prototypes
 void initXWindows(void);
@@ -111,6 +114,7 @@ int main(void)
     srand(time(NULL));
     initXWindows();
     Game game;
+    DefineRagdoll(&game);
     init_opengl(&game);
     create_sounds();
     play();
@@ -195,11 +199,11 @@ void initXWindows(void) {
 
 void reshape_window(Game *game, int width, int height)
 {
-    Character *p = &game->character;
+    Shape *p = &game->body;
     size_flag = true;
     setup_screen_res(width, height);
-    p->s.center.x = width/2;
-    p->s.center.y = (game->altitude - height) / 2;
+    p->center[0] = width/2;
+    p->center[1] = (game->altitude - height) / 2;
     glViewport(0,0, (GLint)width, (GLint)height);
     glMatrixMode(GL_PROJECTION); glLoadIdentity();
     glMatrixMode(GL_MODELVIEW); glLoadIdentity();
@@ -276,6 +280,8 @@ void init_opengl(Game *game)
     glTexImage2D(GL_TEXTURE_2D, 0, 3, skyImage->width, skyImage->height,
 	    0, GL_RGB, GL_UNSIGNED_BYTE, skyImage->data);
     //
+
+/*
     //character
     glBindTexture(GL_TEXTURE_2D, characterTexture);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
@@ -293,6 +299,7 @@ void init_opengl(Game *game)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, characterImage->width, 
 	    characterImage->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, silhouetteData);
     delete [] silhouetteData;
+*/
 }
 
 void check_resize(Game *game, XEvent *e)
@@ -308,11 +315,11 @@ void check_resize(Game *game, XEvent *e)
 
 void makeCharacter(Game *game)
 {
-    Character *p = &game->character;
-    p->s.center.x = xres/2;
-    p->s.center.y = (game->altitude - (yres/2));
-    p->velocity.y = 0;
-    p->velocity.x = 0;
+    Shape *p = &game->body;
+    p->center[0] = xres/2;
+    p->center[1] = (game->altitude - (yres/2));
+    p->velocityy = 0;
+    p->velocityx = 0;
     game->n++;
     start_flag = false;
 }
@@ -435,45 +442,64 @@ void play() {
 
 void movement(Game *game)
 {
-    Character *p;
+    Shape *p;
 
     if (game->n <= 0)
 	return;
 
-    p = &game->character;
-    p->s.center.x += p->velocity.x;
-    p->s.center.y += p->velocity.y;
-    p->s.center.y -= GRAVITY;
-    game->altitude -= GRAVITY;
-    gCameraY += (float)GRAVITY;
+    p = &game->body;
+    p->center[0] += p->velocityx;
+    p->center[1] += p->velocityy;
+    p->center[1] -= GRAVITY;
+    //game->altitude -= GRAVITY;
+    //gCameraY += (float)GRAVITY;
     //check for collision with objects here...
     //Shape *s;
     if (keys[XK_Right]) {
-	p->velocity.x += 2;
+	game->rarm1.rotInc = 0.4f;
+	game->larm1.rotInc = 0.4f;
+	game->rleg1.rotInc = 0.4f;
+	game->lleg1.rotInc = 0.4f;
+	p->velocityx += 2;
     }
     if (keys[XK_Left]) {
-	p->velocity.x += -2;
+	game->rarm1.rotInc = -0.4f;
+	game->larm1.rotInc = -0.4f;
+	game->rleg1.rotInc = -0.4f;
+	game->lleg1.rotInc = -0.4f;
+	p->velocityx += -2;
     }
     if (keys[XK_Up]) {
-	p->velocity.y += 2;
+	p->velocityy += 2;
     }
     if (keys[XK_Down]) {
-	p->velocity.y -= 2;
+	p->velocityy -= 2;
     }
+
+	game->rarm1.rot += game->rarm1.rotInc;
+	game->larm1.rot += game->larm1.rotInc;
+	game->rleg1.rot += game->rleg1.rotInc;
+	game->lleg1.rot += game->lleg1.rotInc;
+
+	const Flt d2r = 1.0/360*3.14159265*2.0; //degrees to radians
+	yy_transform(game->rarm1.rotInc*d2r, game->rarm1.m);
+	yy_transform(game->larm1.rotInc*d2r, game->larm1.m);
+	yy_transform(game->rleg1.rotInc*d2r, game->rleg1.m);
+	yy_transform(game->lleg1.rotInc*d2r, game->lleg1.m);
 
     //border collision detection
     //
-    if (p->s.center.x <= 50) {
-	p->velocity.x = 3;
+    if (p->center[0] <= 50) {
+	p->velocityx = 3;
     }
-    if (p->s.center.x >= (xres - 50)) {
-	p->velocity.x = -3;
+    if (p->center[0] >= (xres - 50)) {
+	p->velocityx = -3;
     }
-    if (p->s.center.y >= (game->altitude - 50)) {
-	p->velocity.y = -3;
+    if (p->center[1]>= (game->altitude - 50)) {
+	p->velocityy = -3;
     }
-    if (p->s.center.y <= (game->altitude - (yres - 50))) {
-	p->velocity.y = 3;
+    if (p->center[1] <= (game->altitude - (yres - 50))) {
+	p->velocityy = 3;
     }
 
     //check for off-screen
@@ -502,7 +528,10 @@ void movement(Game *game)
 
 void render(Game *game)
 {
+
+
     if(!start_flag) {
+
 	float w, h;
 	glClear(GL_COLOR_BUFFER_BIT);
 	//Pop default matrix onto current matrix
@@ -511,7 +540,7 @@ void render(Game *game)
 	//Save default matrix again
 	glPushMatrix();
 	glTranslatef(0.f, gCameraY, 0.f);
-	Vec *c = &game->character.s.center;
+	//Vec *c = &game->character.s.center;
 	w = 49;
 	h = 79;
 	glColor3f(1.0, 1.0, 1.0);
@@ -531,6 +560,7 @@ void render(Game *game)
 	glAlphaFunc(GL_GREATER, 0.0f);
 	glColor4ub(255,255,255,255);
 	glBegin(GL_QUADS);
+/*
 	if (game->character.velocity.x < 0) {
 		glTexCoord2f(0.0f, 1.0f); glVertex2i(c->x-w, c->y-h);
 		glTexCoord2f(0.0f, 0.0f); glVertex2i(c->x-w, c->y+h);
@@ -544,6 +574,7 @@ void render(Game *game)
 		glTexCoord2f(1.0f, 1.0f); glVertex2i(c->x+w, c->y-h);
 	}	
 	glEnd();
+*/
 	int i = STARTING_ALTITUDE;
 	while (i > 0) {
 	    if ((game->altitude < (i + 400)) && (game->altitude > (i - 400))) {
@@ -561,7 +592,227 @@ void render(Game *game)
 	    i = i - 100;
 	}
 
+	Shape *s1 = &game->body;
+	glColor3ubv(s1->color);
+	glTranslatef(s1->center[0], s1->center[1], 0.0f);
+	//glRotatef(-s1->rot, 0.0f, 0.0f, 1.0f);
+	w = s1->width;
+	h = s1->height/2.0;
+	glBegin(GL_QUADS);
+		glVertex2i(-w, -h);
+		glVertex2i(-w,  h);
+		glVertex2i( w,  h);
+		glVertex2i( w, -h);
+		//head
+		glVertex2f(-(float)w*0.6f, h+20.0f);
+		glVertex2f(-(float)w*0.6f, h+40.0f);
+		glVertex2f( (float)w*0.6f, h+40.0f);
+		glVertex2f( (float)w*0.6f, h+20.0f);
+	glEnd();
+	//
+	//draw right arm ---------------------------------------------------------
+	Shape *s2 = &game->rarm1;
+	glColor3ubv(s2->color);
+	glTranslatef(s2->center[0], s2->center[1], 0.0f);
+	glRotatef(-s2->rot, 0.0f, 0.0f, 1.0f);
+	w = s2->width;
+	h = s2->height;
+	glBegin(GL_QUADS);
+		glVertex2i(-w, 0);
+		glVertex2i(-w, h);
+		glVertex2i( w, h);
+		glVertex2i( w, 0);
+	glEnd();
+	//
+	//draw lower arm ---------------------------------------------------------
+	Shape *s3 = &game->rarm2;
+	glColor3ubv(s3->color);
+	glTranslatef(s3->center[0], s3->center[1], 0.0f);
+	glRotatef(-s3->rot, 0.0f, 0.0f, 1.0f);
+	w = s3->width;
+	h = s3->height;
+	glBegin(GL_QUADS);
+		glVertex2i(-w, 0);
+		glVertex2i(-w, h);
+		glVertex2i( w, h);
+		glVertex2i( w, 0);
+	glEnd();
+	//
+	//draw left arm
+	Shape *s4 = &game->larm1;
+	glColor3ubv(s4->color);
+	glTranslatef(s4->center[0], s4->center[1], 0.0f);
+	glRotatef(-s4->rot, 0.0f, 0.0f, 1.0f);
+	w = s4->width;
+	h = s4->height;
+	glBegin(GL_QUADS);
+		glVertex2i(-w, 0);
+		glVertex2i(-w, h);
+		glVertex2i( w, h);
+		glVertex2i( w, 0);
+	glEnd();
+	//draw lower left arm
+	Shape *s5 = &game->larm2;
+	glColor3ubv(s5->color);
+	glTranslatef(s5->center[0], s5->center[1], 0.0f);
+	glRotatef(-s5->rot, 0.0f, 0.0f, 1.0f);
+	w = s5->width;
+	h = s5->height;
+	glBegin(GL_QUADS);
+		glVertex2i(-w, 0);
+		glVertex2i(-w, h);
+		glVertex2i( w, h);
+		glVertex2i( w, 0);
+	glEnd();
+
+	//draw right quad
+	Shape *s6 = &game->rleg1;
+	glColor3ubv(s6->color);
+	glTranslatef(s6->center[0], s6->center[1], 0.0f);
+	glRotatef(-s6->rot, 0.0f, 0.0f, 1.0f);
+	w = s6->width;
+	h = s6->height;
+	glBegin(GL_QUADS);
+		glVertex2i(-w, 0);
+		glVertex2i(-w, h);
+		glVertex2i( w, h);
+		glVertex2i( w, 0);
+	glEnd();
+	
+	//draw right shin
+	Shape *s7 = &game->rleg2;
+	glColor3ubv(s7->color);
+	glTranslatef(s7->center[0], s7->center[1], 0.0f);
+	glRotatef(-s7->rot, 0.0f, 0.0f, 1.0f);
+	w = s7->width;
+	h = s7->height;
+	glBegin(GL_QUADS);
+		glVertex2i(-w, 0);
+		glVertex2i(-w, h);
+		glVertex2i( w, h);
+		glVertex2i( w, 0);
+	glEnd();
+
+	//draw left quad
+	Shape *s8 = &game->lleg1;
+	glColor3ubv(s8->color);
+	glTranslatef(s8->center[0], s8->center[1], 0.0f);
+	glRotatef(-s8->rot, 0.0f, 0.0f, 1.0f);
+	w = s8->width;
+	h = s8->height;
+	glBegin(GL_QUADS);
+		glVertex2i(-w, 0);
+		glVertex2i(-w, h);
+		glVertex2i( w, h);
+		glVertex2i( w, 0);
+	glEnd();
+
+	//draw left shin
+	Shape *s9 = &game->lleg2;
+	glColor3ubv(s9->color);
+	glTranslatef(s9->center[0], s9->center[1], 0.0f);
+	glRotatef(-s9->rot, 0.0f, 0.0f, 1.0f);
+	w = s9->width;
+	h = s9->height;
+	glBegin(GL_QUADS);
+		glVertex2i(-w, 0);
+		glVertex2i(-w, h);
+		glVertex2i( w, h);
+		glVertex2i( w, 0);
+	glEnd();
+	
 	glPopMatrix();
+
+	glPushMatrix();
+	w = 3;
+	h = 3;
+
+	Vec v0 = {s2->center[0], s2->center[1], 0.0};
+	Vec v1;
+	//rotate the shoulder by the body rotation.
+	trans_vector(s1->m, v0, v1);
+	glColor3ub(255,255,255);
+	//offset shoulder by body position
+	v1[0] += s1->center[0];
+	v1[1] += s1->center[1];
+	glBegin(GL_QUADS);
+		glVertex2f(v1[0]-w, v1[1]-h);
+		glVertex2f(v1[0]-w, v1[1]+h);
+		glVertex2f(v1[0]+w, v1[1]+h);
+		glVertex2f(v1[0]+w, v1[1]-h);
+	glEnd();
+
+	//use the shoulder above to determine the elbow location
+	Vec v2 = {s3->center[0], s3->center[1], 0.0};
+	Vec v3, v4; 
+	//rotate the elbow by the body & shoulder rotation.
+	trans_vector(s1->m, v2, v3);
+	trans_vector(s2->m, v3, v4);
+/*	glColor3ub(255,255,255);
+	//offset shoulder by body position
+	v4[0] += v1[0];
+	v4[1] += v1[1];
+	glBegin(GL_QUADS);
+		glVertex2f(v4[0]-w, v4[1]-h);
+		glVertex2f(v4[0]-w, v4[1]+h);
+		glVertex2f(v4[0]+w, v4[1]+h);
+		glVertex2f(v4[0]+w, v4[1]-h);
+*/
+	glEnd();
+
+	//rotate left arm
+	Vec v5 = {s4->center[0], s4->center[1], 0.0};
+	Vec v6, v7;
+	trans_vector(s1->m, v5, v6);
+	trans_vector(s4->m, v6, v7);
+	glColor3ub(255,255,255);
+	//offset shoulder by body position
+	v7[0] += v1[0];
+	v7[1] += v1[1];
+	glBegin(GL_QUADS);
+		glVertex2f(v7[0]-w, v7[1]-h);
+		glVertex2f(v7[0]-w, v7[1]+h);
+		glVertex2f(v7[0]+w, v7[1]+h);
+		glVertex2f(v7[0]+w, v7[1]-h);
+
+	glEnd();
+	
+	//rotate right quad
+	Vec v8 = {s6->center[0], s6->center[1], 0.0};
+	Vec v9, v10;
+	trans_vector(s1->m, v8, v9);
+	trans_vector(s6->m, v9, v10);
+	glColor3ub(255,255,255);
+	//offset shoulder by body position
+	v10[0] += v7[0];
+	v10[1] += v7[1];
+	glBegin(GL_QUADS);
+		glVertex2f(v10[0]-w, v10[1]-h);
+		glVertex2f(v10[0]-w, v10[1]+h);
+		glVertex2f(v10[0]+w, v10[1]+h);
+		glVertex2f(v10[0]+w, v10[1]-h);
+
+	glEnd();
+
+	//rotate left quad
+	Vec v11 = {s8->center[0], s8->center[1], 0.0};
+	Vec v12, v13;
+	trans_vector(s1->m, v11, v12);
+	trans_vector(s8->m, v12, v13);
+	glColor3ub(255,255,255);
+	//offset shoulder by body position
+	v13[0] += v10[0];
+	v13[1] += v10[1];
+	glBegin(GL_QUADS);
+		glVertex2f(v13[0]-w, v13[1]-h);
+		glVertex2f(v13[0]-w, v13[1]+h);
+		glVertex2f(v13[0]+w, v13[1]+h);
+		glVertex2f(v13[0]+w, v13[1]-h);
+
+	glEnd();
+
+	glPopMatrix();
+
     }
 
     if(start_flag) {
