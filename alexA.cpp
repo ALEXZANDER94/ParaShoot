@@ -77,7 +77,7 @@ void DefineRagdoll(Game *game)
     //define lower right arm
     s = &game->rarm2;
     s->width = 7;
-    s->height = 30;
+    s->height = 40;
     s->center[0] = s->width/2;
     s->center[1] = 0;
     //place on upper arm
@@ -109,7 +109,7 @@ void DefineRagdoll(Game *game)
     //define lower left arm
     s = &game->larm2;
     s->width = 7;
-    s->height = 30;
+    s->height = 40;
     s->center[0] = s->width/2;
     s->center[1] = 0;
     //place on upper arm
@@ -129,8 +129,8 @@ void DefineRagdoll(Game *game)
     s->center[0] = s->width/2;
     s->center[1] = 0;
     //place quad on body
-    s->center[0] += 36;
-    s->center[1] += -40;
+    s->center[0] += 35;
+    s->center[1] += -42;
     s->color[0] = 90;
     s->color[1] = 45;
     s->color[2] = 45;

@@ -450,23 +450,23 @@ void movement(Game *game)
     p = &game->body;
     p->center[0] += p->velocityx;
     p->center[1] += p->velocityy;
-    p->center[1] -= GRAVITY;
+    //p->center[1] -= GRAVITY;
     //game->altitude -= GRAVITY;
     //gCameraY += (float)GRAVITY;
     //check for collision with objects here...
     //Shape *s;
     if (keys[XK_Right]) {
-	game->rarm1.rotInc = 0.4f;
-	game->larm1.rotInc = 0.4f;
-	game->rleg1.rotInc = 0.4f;
-	game->lleg1.rotInc = 0.4f;
+	game->rarm1.rotInc += 0.4f;
+	game->larm1.rotInc += 0.4f;
+	game->rleg1.rotInc += 0.4f;
+	game->lleg1.rotInc += 0.4f;
 	p->velocityx += 2;
     }
     if (keys[XK_Left]) {
-	game->rarm1.rotInc = -0.4f;
-	game->larm1.rotInc = -0.4f;
-	game->rleg1.rotInc = -0.4f;
-	game->lleg1.rotInc = -0.4f;
+	game->rarm1.rotInc += -0.4f;
+	game->larm1.rotInc += -0.4f;
+	game->rleg1.rotInc += -0.4f;
+	game->lleg1.rotInc += -0.4f;
 	p->velocityx += -2;
     }
     if (keys[XK_Up]) {
@@ -482,8 +482,10 @@ void movement(Game *game)
 	game->lleg1.rot += game->lleg1.rotInc;
 
 	const Flt d2r = 1.0/360*3.14159265*2.0; //degrees to radians
-	yy_transform(game->rarm1.rotInc*d2r, game->rarm1.m);
+
 	yy_transform(game->larm1.rotInc*d2r, game->larm1.m);
+	yy_transform(game->rarm1.rotInc*d2r, game->rarm1.m);
+
 	yy_transform(game->rleg1.rotInc*d2r, game->rleg1.m);
 	yy_transform(game->lleg1.rotInc*d2r, game->lleg1.m);
 
@@ -591,11 +593,12 @@ void render(Game *game)
 	    }
 	    i = i - 100;
 	}
-
+	//draw body
+	glPushMatrix();
 	Shape *s1 = &game->body;
 	glColor3ubv(s1->color);
 	glTranslatef(s1->center[0], s1->center[1], 0.0f);
-	//glRotatef(-s1->rot, 0.0f, 0.0f, 1.0f);
+	glRotatef(-s1->rot, 0.0f, 0.0f, 1.0f);
 	w = s1->width;
 	h = s1->height/2.0;
 	glBegin(GL_QUADS);
@@ -611,6 +614,7 @@ void render(Game *game)
 	glEnd();
 	//
 	//draw right arm ---------------------------------------------------------
+	glPushMatrix();
 	Shape *s2 = &game->rarm1;
 	glColor3ubv(s2->color);
 	glTranslatef(s2->center[0], s2->center[1], 0.0f);
@@ -637,11 +641,13 @@ void render(Game *game)
 		glVertex2i( w, h);
 		glVertex2i( w, 0);
 	glEnd();
+	glPopMatrix();
 	//
 	//draw left arm
+	glPushMatrix();
 	Shape *s4 = &game->larm1;
 	glColor3ubv(s4->color);
-	glTranslatef(s4->center[0], s4->center[1], 0.0f);
+	glTranslatef(s4->center[0]+20, s4->center[1]+20, 0.0f);
 	glRotatef(-s4->rot, 0.0f, 0.0f, 1.0f);
 	w = s4->width;
 	h = s4->height;
@@ -664,11 +670,12 @@ void render(Game *game)
 		glVertex2i( w, h);
 		glVertex2i( w, 0);
 	glEnd();
-
+	glPopMatrix();
 	//draw right quad
+	glPushMatrix();
 	Shape *s6 = &game->rleg1;
 	glColor3ubv(s6->color);
-	glTranslatef(s6->center[0], s6->center[1], 0.0f);
+	glTranslatef(s6->center[0], s6->center[1]-18, 0.0f);
 	glRotatef(-s6->rot, 0.0f, 0.0f, 1.0f);
 	w = s6->width;
 	h = s6->height;
@@ -678,7 +685,6 @@ void render(Game *game)
 		glVertex2i( w, h);
 		glVertex2i( w, 0);
 	glEnd();
-	
 	//draw right shin
 	Shape *s7 = &game->rleg2;
 	glColor3ubv(s7->color);
@@ -692,11 +698,12 @@ void render(Game *game)
 		glVertex2i( w, h);
 		glVertex2i( w, 0);
 	glEnd();
-
+	glPopMatrix();
 	//draw left quad
+	glPushMatrix();
 	Shape *s8 = &game->lleg1;
 	glColor3ubv(s8->color);
-	glTranslatef(s8->center[0], s8->center[1], 0.0f);
+	glTranslatef(s8->center[0], s8->center[1]-60, 0.0f);
 	glRotatef(-s8->rot, 0.0f, 0.0f, 1.0f);
 	w = s8->width;
 	h = s8->height;
@@ -706,7 +713,6 @@ void render(Game *game)
 		glVertex2i( w, h);
 		glVertex2i( w, 0);
 	glEnd();
-
 	//draw left shin
 	Shape *s9 = &game->lleg2;
 	glColor3ubv(s9->color);
@@ -720,13 +726,17 @@ void render(Game *game)
 		glVertex2i( w, h);
 		glVertex2i( w, 0);
 	glEnd();
-	
+	glPopMatrix(); //pop left quad matrix
+
+	glPopMatrix(); //pop body matrix
+
 	glPopMatrix();
 
-	glPushMatrix();
+
 	w = 3;
 	h = 3;
 
+	glPushMatrix();
 	Vec v0 = {s2->center[0], s2->center[1], 0.0};
 	Vec v1;
 	//rotate the shoulder by the body rotation.
@@ -742,29 +752,10 @@ void render(Game *game)
 		glVertex2f(v1[0]+w, v1[1]-h);
 	glEnd();
 
-	//use the shoulder above to determine the elbow location
-	Vec v2 = {s3->center[0], s3->center[1], 0.0};
-	Vec v3, v4; 
-	//rotate the elbow by the body & shoulder rotation.
-	trans_vector(s1->m, v2, v3);
-	trans_vector(s2->m, v3, v4);
-/*	glColor3ub(255,255,255);
-	//offset shoulder by body position
-	v4[0] += v1[0];
-	v4[1] += v1[1];
-	glBegin(GL_QUADS);
-		glVertex2f(v4[0]-w, v4[1]-h);
-		glVertex2f(v4[0]-w, v4[1]+h);
-		glVertex2f(v4[0]+w, v4[1]+h);
-		glVertex2f(v4[0]+w, v4[1]-h);
-*/
-	glEnd();
-
 	//rotate left arm
 	Vec v5 = {s4->center[0], s4->center[1], 0.0};
-	Vec v6, v7;
-	trans_vector(s1->m, v5, v6);
-	trans_vector(s4->m, v6, v7);
+	Vec v7;
+	trans_vector(s1->m, v5, v7);
 	glColor3ub(255,255,255);
 	//offset shoulder by body position
 	v7[0] += v1[0];
@@ -776,14 +767,12 @@ void render(Game *game)
 		glVertex2f(v7[0]+w, v7[1]-h);
 
 	glEnd();
-	
 	//rotate right quad
 	Vec v8 = {s6->center[0], s6->center[1], 0.0};
-	Vec v9, v10;
-	trans_vector(s1->m, v8, v9);
-	trans_vector(s6->m, v9, v10);
+	Vec v10;
+	trans_vector(s1->m, v8, v10);
 	glColor3ub(255,255,255);
-	//offset shoulder by body position
+	//offset hip by body position
 	v10[0] += v7[0];
 	v10[1] += v7[1];
 	glBegin(GL_QUADS);
@@ -793,14 +782,12 @@ void render(Game *game)
 		glVertex2f(v10[0]+w, v10[1]-h);
 
 	glEnd();
-
 	//rotate left quad
 	Vec v11 = {s8->center[0], s8->center[1], 0.0};
-	Vec v12, v13;
-	trans_vector(s1->m, v11, v12);
-	trans_vector(s8->m, v12, v13);
+	Vec v13;
+	trans_vector(s1->m, v11, v13);
 	glColor3ub(255,255,255);
-	//offset shoulder by body position
+	//offset hip by body position
 	v13[0] += v10[0];
 	v13[1] += v10[1];
 	glBegin(GL_QUADS);
@@ -810,9 +797,7 @@ void render(Game *game)
 		glVertex2f(v13[0]+w, v13[1]-h);
 
 	glEnd();
-
 	glPopMatrix();
-
     }
 
     if(start_flag) {
