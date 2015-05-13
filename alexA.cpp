@@ -83,9 +83,9 @@ void DefineRagdoll(Game *game)
     //place on upper arm
     s->center[0] += -5;
     s->center[1] += 30;
-    s->color[0] = 45;
-    s->color[1] = 90;
-    s->color[2] = 45;
+    s->color[0] = 0;
+    s->color[1] = 0;
+    s->color[2] = 0;
     s->rotInc = 0.0f;
     s->rot = 315.0f;
     identity33(s->m);
@@ -115,9 +115,9 @@ void DefineRagdoll(Game *game)
     //place on upper arm
     s->center[0] += -3;
     s->center[1] += 30;
-    s->color[0] = 45;
-    s->color[1] = 90;
-    s->color[2] = 45;
+    s->color[0] = 0;
+    s->color[1] = 0;
+    s->color[2] = 0;
     s->rotInc = 0.0f;
     s->rot = 45.0f;
     identity33(s->m);
@@ -129,13 +129,13 @@ void DefineRagdoll(Game *game)
     s->center[0] = s->width/2;
     s->center[1] = 0;
     //place quad on body
-    s->center[0] += 35;
-    s->center[1] += -42;
+    s->center[0] += 15;
+    s->center[1] += 20;
     s->color[0] = 90;
     s->color[1] = 45;
     s->color[2] = 45;
     s->rotInc = 0.0f;
-    s->rot = 330.0f;
+    s->rot = 45.0f;
     identity33(s->m);
 
     //define right shin
@@ -145,13 +145,13 @@ void DefineRagdoll(Game *game)
     s->center[0] = s->width/2;
     s->center[1] = 0;
     //place shin on quad
-    s->center[0] += -20;
-    s->center[1] += -30;
-    s->color[0] = 45;
-    s->color[1] = 90;
-    s->color[2] = 45;
+    s->center[0] += 20;
+    s->center[1] += 75;
+    s->color[0] = 0;
+    s->color[1] = 0;
+    s->color[2] = 0;
     s->rotInc = 0.0f;
-    s->rot = 30.0f;
+    s->rot = 135.0f;
     identity33(s->m);
 
     //define left quad
@@ -167,7 +167,7 @@ void DefineRagdoll(Game *game)
     s->color[1] = 90;
     s->color[2] = 45;
     s->rotInc = 0.0f;
-    s->rot = 30.0f;
+    s->rot = 0.0f;
     identity33(s->m);
 
     //define left shin
@@ -177,13 +177,13 @@ void DefineRagdoll(Game *game)
     s->center[0] = s->width/2;
     s->center[1] = 0;
     //place shin on quad
-    s->center[0] += -4;
-    s->center[1] += 4;
-    s->color[0] = 45;
-    s->color[1] = 90;
-    s->color[2] = 45;
+    s->center[0] += -5;
+    s->center[1] += 40;
+    s->color[0] = 0;
+    s->color[1] = 0;
+    s->color[2] = 0;
     s->rotInc = 0.0f;
-    s->rot = 150.0f;
+    s->rot = 40.0f;
     identity33(s->m);
 }
 

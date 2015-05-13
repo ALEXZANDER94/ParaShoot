@@ -450,11 +450,10 @@ void movement(Game *game)
     p = &game->body;
     p->center[0] += p->velocityx;
     p->center[1] += p->velocityy;
-    //p->center[1] -= GRAVITY;
-    //game->altitude -= GRAVITY;
-    //gCameraY += (float)GRAVITY;
+    p->center[1] -= GRAVITY;
+    game->altitude -= GRAVITY;
+    gCameraY += (float)GRAVITY;
     //check for collision with objects here...
-    //Shape *s;
     if (keys[XK_Right]) {
 	game->rarm1.rotInc += 0.4f;
 	game->larm1.rotInc += 0.4f;
@@ -470,12 +469,19 @@ void movement(Game *game)
 	p->velocityx += -2;
     }
     if (keys[XK_Up]) {
+	game->rarm1.rotInc += 0.4f;
+	game->larm1.rotInc += -0.4f;
+	game->rleg1.rotInc += 0.4f;
+	game->lleg1.rotInc += -0.4f;
 	p->velocityy += 2;
     }
     if (keys[XK_Down]) {
+	game->rarm1.rotInc += -0.4f;
+	game->larm1.rotInc += 0.4f;
+	game->rleg1.rotInc += -0.4f;
+	game->lleg1.rotInc += 0.4f;
 	p->velocityy -= 2;
     }
-
 	game->rarm1.rot += game->rarm1.rotInc;
 	game->larm1.rot += game->larm1.rotInc;
 	game->rleg1.rot += game->rleg1.rotInc;
@@ -483,11 +489,11 @@ void movement(Game *game)
 
 	const Flt d2r = 1.0/360*3.14159265*2.0; //degrees to radians
 
+	yy_transform(game->rleg1.rotInc*d2r, game->rleg1.m);
+	yy_transform(game->lleg1.rotInc*d2r, game->lleg1.m);
 	yy_transform(game->larm1.rotInc*d2r, game->larm1.m);
 	yy_transform(game->rarm1.rotInc*d2r, game->rarm1.m);
 
-	yy_transform(game->rleg1.rotInc*d2r, game->rleg1.m);
-	yy_transform(game->lleg1.rotInc*d2r, game->lleg1.m);
 
     //border collision detection
     //
@@ -503,6 +509,8 @@ void movement(Game *game)
     if (p->center[1] <= (game->altitude - (yres - 50))) {
 	p->velocityy = 3;
     }
+
+	
 
     //check for off-screen
     /*
@@ -538,9 +546,8 @@ void render(Game *game)
 	glClear(GL_COLOR_BUFFER_BIT);
 	//Pop default matrix onto current matrix
 	glMatrixMode(GL_MODELVIEW);
-	//glPopMatrix();
 	//Save default matrix again
-	glPushMatrix();
+	glPushMatrix(); //push ragdoll matrix
 	glTranslatef(0.f, gCameraY, 0.f);
 	//Vec *c = &game->character.s.center;
 	w = 49;
@@ -593,12 +600,13 @@ void render(Game *game)
 	    }
 	    i = i - 100;
 	}
+	//glPopMatrix();
 	//draw body
 	glPushMatrix();
 	Shape *s1 = &game->body;
 	glColor3ubv(s1->color);
 	glTranslatef(s1->center[0], s1->center[1], 0.0f);
-	glRotatef(-s1->rot, 0.0f, 0.0f, 1.0f);
+	//glRotatef(-s1->rot, 0.0f, 0.1f, 0.0f);
 	w = s1->width;
 	h = s1->height/2.0;
 	glBegin(GL_QUADS);
@@ -606,11 +614,15 @@ void render(Game *game)
 		glVertex2i(-w,  h);
 		glVertex2i( w,  h);
 		glVertex2i( w, -h);
-		//head
-		glVertex2f(-(float)w*0.6f, h+20.0f);
-		glVertex2f(-(float)w*0.6f, h+40.0f);
-		glVertex2f( (float)w*0.6f, h+40.0f);
-		glVertex2f( (float)w*0.6f, h+20.0f);
+	glEnd();
+	//head
+	w = s1->width - 10;
+	h = 20;
+	glBegin(GL_QUADS);
+		glVertex2f(-(float)w, h+5);
+		glVertex2f(-(float)w, h+30);
+		glVertex2f( (float)w, h+30);
+		glVertex2f( (float)w, h+5);
 	glEnd();
 	//
 	//draw right arm ---------------------------------------------------------
@@ -627,6 +639,7 @@ void render(Game *game)
 		glVertex2i( w, h);
 		glVertex2i( w, 0);
 	glEnd();
+
 	//
 	//draw lower arm ---------------------------------------------------------
 	Shape *s3 = &game->rarm2;
@@ -657,6 +670,7 @@ void render(Game *game)
 		glVertex2i( w, h);
 		glVertex2i( w, 0);
 	glEnd();
+
 	//draw lower left arm
 	Shape *s5 = &game->larm2;
 	glColor3ubv(s5->color);
@@ -675,23 +689,25 @@ void render(Game *game)
 	glPushMatrix();
 	Shape *s6 = &game->rleg1;
 	glColor3ubv(s6->color);
-	glTranslatef(s6->center[0], s6->center[1]-18, 0.0f);
-	glRotatef(-s6->rot, 0.0f, 0.0f, 1.0f);
+	glTranslatef(s6->center[0], s6->center[1]-43, 0.0f);
+	glRotatef(-s6->rot-105, 0.0f, 0.0f, 1.0f);
 	w = s6->width;
-	h = s6->height;
+	h = s6->height+5;
 	glBegin(GL_QUADS);
 		glVertex2i(-w, 0);
 		glVertex2i(-w, h);
 		glVertex2i( w, h);
 		glVertex2i( w, 0);
 	glEnd();
+
 	//draw right shin
 	Shape *s7 = &game->rleg2;
 	glColor3ubv(s7->color);
-	glTranslatef(s7->center[0], s7->center[1], 0.0f);
-	glRotatef(-s7->rot, 0.0f, 0.0f, 1.0f);
+	glTranslatef(s7->center[0], s7->center[1]+8, 0.0f);
+	glRotatef(-s7->rot-75, 0.0f, 0.0f, 1.0f);
+	glRotatef(0.0, 1.0f, 0.0f, 0.0f);
 	w = s7->width;
-	h = s7->height;
+	h = s7->height+5;
 	glBegin(GL_QUADS);
 		glVertex2i(-w, 0);
 		glVertex2i(-w, h);
@@ -703,40 +719,37 @@ void render(Game *game)
 	glPushMatrix();
 	Shape *s8 = &game->lleg1;
 	glColor3ubv(s8->color);
-	glTranslatef(s8->center[0], s8->center[1]-60, 0.0f);
-	glRotatef(-s8->rot, 0.0f, 0.0f, 1.0f);
+	glTranslatef(s8->center[0]+20, s8->center[1]-23, 0.0f);
+	glRotatef(-s8->rot+150, 0.0f, 0.0f, 1.0f);
 	w = s8->width;
-	h = s8->height;
+	h = s8->height+5;
 	glBegin(GL_QUADS);
 		glVertex2i(-w, 0);
 		glVertex2i(-w, h);
 		glVertex2i( w, h);
 		glVertex2i( w, 0);
 	glEnd();
+
 	//draw left shin
 	Shape *s9 = &game->lleg2;
 	glColor3ubv(s9->color);
-	glTranslatef(s9->center[0], s9->center[1], 0.0f);
-	glRotatef(-s9->rot, 0.0f, 0.0f, 1.0f);
+	glTranslatef(s9->center[0], s9->center[1]+5, 0.0f);
+	glRotatef(-s9->rot+70, 0.0f, 0.0f, 1.0f);
+	glRotatef(0.0, 1.0f, 0.0f, 0.0f);
 	w = s9->width;
-	h = s9->height;
+	h = s9->height+5;
 	glBegin(GL_QUADS);
 		glVertex2i(-w, 0);
 		glVertex2i(-w, h);
 		glVertex2i( w, h);
 		glVertex2i( w, 0);
 	glEnd();
-	glPopMatrix(); //pop left quad matrix
-
-	glPopMatrix(); //pop body matrix
-
 	glPopMatrix();
-
-
+	glPopMatrix(); //pop body matrix
+	glPopMatrix();
 	w = 3;
 	h = 3;
 
-	glPushMatrix();
 	Vec v0 = {s2->center[0], s2->center[1], 0.0};
 	Vec v1;
 	//rotate the shoulder by the body rotation.
@@ -745,59 +758,30 @@ void render(Game *game)
 	//offset shoulder by body position
 	v1[0] += s1->center[0];
 	v1[1] += s1->center[1];
-	glBegin(GL_QUADS);
-		glVertex2f(v1[0]-w, v1[1]-h);
-		glVertex2f(v1[0]-w, v1[1]+h);
-		glVertex2f(v1[0]+w, v1[1]+h);
-		glVertex2f(v1[0]+w, v1[1]-h);
-	glEnd();
-
 	//rotate left arm
-	Vec v5 = {s4->center[0], s4->center[1], 0.0};
+	Vec v5 = {s4->center[0]+20, s4->center[1]+20, 0.0};
 	Vec v7;
 	trans_vector(s1->m, v5, v7);
 	glColor3ub(255,255,255);
 	//offset shoulder by body position
-	v7[0] += v1[0];
-	v7[1] += v1[1];
-	glBegin(GL_QUADS);
-		glVertex2f(v7[0]-w, v7[1]-h);
-		glVertex2f(v7[0]-w, v7[1]+h);
-		glVertex2f(v7[0]+w, v7[1]+h);
-		glVertex2f(v7[0]+w, v7[1]-h);
-
-	glEnd();
+	v7[0] += s1->center[0];
+	v7[1] += s1->center[1];
 	//rotate right quad
-	Vec v8 = {s6->center[0], s6->center[1], 0.0};
+	Vec v8 = {s6->center[0]-20, s6->center[1]-20, 0.0};
 	Vec v10;
 	trans_vector(s1->m, v8, v10);
 	glColor3ub(255,255,255);
 	//offset hip by body position
-	v10[0] += v7[0];
-	v10[1] += v7[1];
-	glBegin(GL_QUADS);
-		glVertex2f(v10[0]-w, v10[1]-h);
-		glVertex2f(v10[0]-w, v10[1]+h);
-		glVertex2f(v10[0]+w, v10[1]+h);
-		glVertex2f(v10[0]+w, v10[1]-h);
-
-	glEnd();
+	v10[0] += s1->center[0];
+	v10[1] += s1->center[1];
 	//rotate left quad
-	Vec v11 = {s8->center[0], s8->center[1], 0.0};
+	Vec v11 = {s8->center[0]+20, s8->center[1]-20, 0.0};
 	Vec v13;
 	trans_vector(s1->m, v11, v13);
 	glColor3ub(255,255,255);
 	//offset hip by body position
-	v13[0] += v10[0];
-	v13[1] += v10[1];
-	glBegin(GL_QUADS);
-		glVertex2f(v13[0]-w, v13[1]-h);
-		glVertex2f(v13[0]-w, v13[1]+h);
-		glVertex2f(v13[0]+w, v13[1]+h);
-		glVertex2f(v13[0]+w, v13[1]-h);
-
-	glEnd();
-	glPopMatrix();
+	v13[0] += s1->center[0];
+	v13[1] += s1->center[1];
     }
 
     if(start_flag) {
