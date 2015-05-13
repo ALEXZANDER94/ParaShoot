@@ -86,13 +86,13 @@ void DefineRagdoll(Game *game)
 	s->center.x = s->width/2;
 	s->center.y = 0;
 	//place quad on body
-	s->center.x += 35;
-	s->center.y += -42;
+	s->center.x += 15;
+	s->center.y += 20;
 	s->color[0] = 90;
 	s->color[1] = 45;
 	s->color[2] = 45;
 	s->rotInc = 0.0f;
-	s->rot = 330.0f;
+	s->rot = 45.0f;
 	identity33(s->m);
 	//define right shin
 	s = &game->rleg2;
@@ -101,13 +101,13 @@ void DefineRagdoll(Game *game)
 	s->center.x = s->width/2;
 	s->center.y = 0;
 	//place shin on quad
-	s->center.x += -20;
-	s->center.y += -30;
+	s->center.x += 20;
+	s->center.y += 75;
 	s->color[0] = 45;
 	s->color[1] = 90;
 	s->color[2] = 45;
 	s->rotInc = 0.0f;
-	s->rot = 30.0f;
+	s->rot = 135.0f;
 	identity33(s->m);
 	//define left quad
 	s = &game->lleg1;
@@ -122,7 +122,7 @@ void DefineRagdoll(Game *game)
 	s->color[1] = 90;
 	s->color[2] = 45;
 	s->rotInc = 0.0f;
-	s->rot = 30.0f;
+	s->rot = 0.0f;
 	identity33(s->m);
 	//define left shin
 	s = &game->lleg2;
@@ -131,13 +131,13 @@ void DefineRagdoll(Game *game)
 	s->center.x = s->width/2;
 	s->center.y = 0;
 	//place shin on quad
-	s->center.x += -4;
-	s->center.y += 4;
+	s->center.x += -5;
+	s->center.y += 40;
 	s->color[0] = 45;
 	s->color[1] = 90;
 	s->color[2] = 45;
 	s->rotInc = 0.0f;
-	s->rot = 150.0f;
+	s->rot = 40.0f;
 	identity33(s->m);
 }
 void identity33(Matrix mat)
